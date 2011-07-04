@@ -1,6 +1,6 @@
-from panomena.accounts.forms import BaseProfileForm
+from panomena_accounts.forms import BaseProfileForm
 
-from models import FacebookProfile
+from panomena_facebook.models import FacebookProfile
 
 
 class BaseFacebookRegisterForm(BaseProfileForm):

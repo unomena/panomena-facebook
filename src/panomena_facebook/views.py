@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 
-from panomena.general.utils import class_from_string, SettingsFetcher, \
+from panomena_general.utils import class_from_string, SettingsFetcher, \
     json_response, is_ajax_request
 
 

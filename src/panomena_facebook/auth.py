@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 
-from models import FacebookProfile
+from panomena_facebook.models import FacebookProfile
 
 
 class FacebookAuth(object):

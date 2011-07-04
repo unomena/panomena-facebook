@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 
-from panomena.general.utils import parse_kw_args, get_setting
+from panomena_general.utils import parse_kw_args, get_setting
 
 
 register = template.Library()
