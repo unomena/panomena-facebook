@@ -1,0 +1,26 @@
+<div id="fb-root"></div>
+
+<script type="text/javascript">
+    window.fbAsyncInit = function() {
+        FB.init({{ params }});
+    };
+
+    (function() {
+        var e = document.createElement('script');
+        e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
+        e.async = true;
+        document.getElementById('fb-root').appendChild(e);
+    }());
+
+    facebookLogin = function () {
+        FB.login(
+            function(response) {
+                window.location.href = '{% url facebook_register %}';
+            },
+            {
+                {% if perms %}perms: '{{ perms }}'{% endif %}
+            }
+        );
+    };
+
+</script>
