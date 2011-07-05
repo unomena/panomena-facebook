@@ -50,7 +50,7 @@ def register(request):
     form_class = class_from_string(form_class)
     # handle the form post
     if request.method == 'POST':
-        form = form_class(fbdata, request.POST, user=user)
+        form = form_class(fbdata, fb_user_data, request.POST, user=user)
         if form.is_valid():
             user = form.save()
             user = authenticate(
@@ -61,7 +61,7 @@ def register(request):
             url = settings.LOGIN_REDIRECT_URL
             return redirect(url)
     else:
-        form = form_class(fbdata, user=user)
+        form = form_class(fbdata, fb_user_data, user=user)
     context.update({
         'form': form,
         'fb_user_data': fb_user_data,

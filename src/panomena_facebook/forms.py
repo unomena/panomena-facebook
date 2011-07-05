@@ -5,9 +5,11 @@ from panomena_facebook.models import FacebookProfile
 
 class BaseFacebookRegisterForm(BaseProfileForm):
 
-    def __init__(self, facebook_data, *args, **kwargs):
+    def __init__(self, facebook_data, facebook_user_data, *args, **kwargs):
         self.facebook_data = facebook_data
         super(BaseFacebookRegisterForm, self).__init__(*args, **kwargs)
+        # fill fields with facebook data
+        self.initial.update(self.get_field_values(facebook_user_data))
 
     def save(self):
         """Creates and attaches a facebook profile to the user object if
