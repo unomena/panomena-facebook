@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 
 from panomena_general.utils import class_from_string, SettingsFetcher, \
-    json_response, json_redirect, is_ajax_request
+    json_response, ajax_redirect, is_ajax_request
 
 
 settings = SettingsFetcher('facebook')
@@ -34,10 +34,8 @@ class RegisterView(object):
         user = self.authenticate(fbdata)
         login(request, user)
         # redirect appropriately
-        url = settings.LOGIN_REDIRECT_URL
-        ajax = is_ajax_request(request)
-        if ajax: response = json_redirect(url)
-        else: response = redirect(url)
+        url = form.cleaned_data.get('next') or settings.LOGIN_REDIRECT_URL
+        response = ajax_redirect(request, url)
         # return the response
         return response
 
@@ -47,6 +45,7 @@ class RegisterView(object):
 
     def __call__(self, request):
         """Override to check for facebook data and react accordingly."""
+        user = request.user
         context = RequestContext(request)
         # retrieve facebook data from cookie
         app_id = settings.FACEBOOK_APP_ID
@@ -66,23 +65,27 @@ class RegisterView(object):
         except facebook.GraphAPIError, e:
             context['message'] = e.message
             return render_to_response('facebook/failed.html', context)
-        # attempt to authenticate the user with uid and access token
-        user = authenticate(
-            uid=fbdata['uid'],
-            oauth_access_token=fbdata['access_token']
-        )
-        # redirect existing user
-        if user:
-            login(request, user)
-            return redirect(settings.LOGIN_REDIRECT_URL)
+        # take specific action on unauthentcated users
+        if not user.is_authenticated():
+            # attempt to authenticate the user with uid and access token
+            user = authenticate(
+                uid=fbdata['uid'],
+                oauth_access_token=fbdata['access_token']
+            )
+            # redirect existing user
+            if user:
+                login(request, user)
+                return redirect(settings.LOGIN_REDIRECT_URL)
         # handle the form post
         form_class = self.form()
         if request.method == 'POST':
-            form = form_class(fbdata, fb_user_data, request.POST, user=user)
+            form = form_class(
+                request, fbdata, fb_user_data, request.POST, user=user
+            )
             if form.is_valid():
                 return self.valid(request, form, fbdata)
         else:
-            form = form_class(fbdata, fb_user_data, user=user)
+            form = form_class(request, fbdata, fb_user_data, user=user)
         context.update({
             'form': form,
             'fb_user_data': fb_user_data,
@@ -102,6 +105,10 @@ def share(request):
     next_url = request.REQUEST.get('next', None)
     if next_url is None:
         next_url = request.META.get('HTTP_REFERER', '/')
+    # redirect to facebook settings page if not connected
+    if not connected:
+        url = reverse('facebook_register') + '?next=' + next_url
+        return redirect(url)
     # attempt to create the post
     success = False
     try:
@@ -112,10 +119,6 @@ def share(request):
             success = True
     except facebook.GraphAPIError:
         pass
-    # redirect to facebook settings page if not connected
-    if not connected:
-        url = reverse('facebook_register') + '?next=' + next_url
-        return redirect(url)
     # response appropriately to the request
     ajax = is_ajax_request(request)
     if ajax:

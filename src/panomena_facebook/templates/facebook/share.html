@@ -1,0 +1,5 @@
+{% if connected %}
+    <a class="{{ cls }}" href="{% url facebook_share %}?url={{ url }}"></a>
+{% else %}
+    <a class="{{ cls }}" href="#" onclick="facebookLogin('{% url facebook_share %}?url={{ url }}&next={{ current_url }}');"></a>
+{% endif %}

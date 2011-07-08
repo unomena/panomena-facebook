@@ -2,10 +2,14 @@ import json
 
 from django import template
 from django.conf import settings
+from django.utils.http import urlquote
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 
 from panomena_general.utils import parse_kw_args, get_setting
+from panomena_general.exceptions import RequestContextRequiredException
+
+from panomena_facebook.exceptions import FacebookMiddlewareRequiredException
 
 
 register = template.Library()
@@ -50,8 +54,29 @@ class FacebookInitNode(template.Node):
 
 @register.inclusion_tag('facebook/connect.html', takes_context=True)
 def facebook_connect(context, image_url):
+    """Facebook connect button tag."""
     return {
         'MEDIA_URL': context['MEDIA_URL'],
         'image_url': image_url,
     }
 
+
+@register.inclusion_tag('facebook/share.html', takes_context=True)
+def facebook_share(context, cls, url):
+    """Facebook share button tag."""
+    # get the request
+    request = context.get('request')
+    if request is None:
+        raise RequestContextRequiredException('facebook share tag')
+    # get the facebook middleware object
+    fb = getattr(request, 'facebook')
+    if fb is None:
+        raise FacebookMiddlewareRequiredException('facebook share tag')
+    connected = (fb.uid is not None)
+    # return the context
+    return {
+        'cls': cls,
+        'url': urlquote(url),
+        'current_url': urlquote(request.get_full_path()),
+        'connected': connected,
+    }

@@ -12,10 +12,14 @@
         document.getElementById('fb-root').appendChild(e);
     }());
 
-    facebookLogin = function () {
+    facebookLogin = function (next_url) {
         FB.login(
             function(response) {
-                window.location.href = '{% url facebook_register %}';
+                url = '{% url facebook_register %}';
+                if (next_url !== undefined) {
+                    url += '?next=' + escape(next_url);
+                }
+                window.location.href = url;
             },
             {
                 {% if perms %}perms: '{{ perms }}'{% endif %}
