@@ -7,6 +7,7 @@ class BaseFacebookRegisterForm(BaseProfileForm):
 
     def __init__(self, request, facebook_data, facebook_user_data, *args, **kwargs):
         self.facebook_data = facebook_data
+        self.facebook_user_data = facebook_user_data
         super(BaseFacebookRegisterForm, self).__init__(request, *args, **kwargs)
         # fill fields with facebook data
         self.initial.update(self.get_field_values(facebook_user_data))
