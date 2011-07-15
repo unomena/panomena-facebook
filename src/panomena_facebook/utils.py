@@ -2,7 +2,7 @@ import json
 import hmac
 import hashlib
 
-from panomena_general import base64_url_decode
+from panomena_general.utils import base64_url_decode
 
 
 def parse_signed_request(signed_request, secret):
