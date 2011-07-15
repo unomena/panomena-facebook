@@ -4,11 +4,13 @@ from django import template
 from django.conf import settings
 from django.utils.http import urlquote
 from django.utils.safestring import mark_safe
+from django.template import TemplateSyntaxError
 from django.template.loader import render_to_string
 
 from panomena_general.utils import parse_kw_args, get_setting
 from panomena_general.exceptions import RequestContextRequiredException
 
+from panomena_facebook.utils import build_app_url
 from panomena_facebook.exceptions import FacebookMiddlewareRequiredException
 
 
@@ -80,3 +82,40 @@ def facebook_share(context, cls, url):
         'current_url': urlquote(request.get_full_path()),
         'connected': connected,
     }
+
+
+class AppUrlNode(template.Node):
+    """Facebook application url tag node."""
+
+    def __init__(self, url, asvar):
+        self.url = url
+        self.asvar = asvar
+
+    def render(self, context):
+        url = self.url.resolve(context)
+        asvar = self.asvar
+        # build the url
+        app_url = build_app_url(url)
+        # take appropriate action
+        if asvar:
+            context[asvar] = app_url
+            return ''
+        else:
+            return app_url
+
+
+@register.tag
+def facebook_app_url(parser, token):
+    """Parsing method for facebook application url build node."""
+    bits = token.split_contents()
+    # check minimum argument count
+    if len(bits) < 2:
+        raise TemplateSyntaxError('%r takes at least 1 argument.' % bits[0])
+    # determine var name if given
+    asvar = None
+    if len(bits) >= 2 and bits[-2] == 'as':
+        asvar = bits[-1]
+        bits = bits[:-2]
+    # return the node
+    url = parser.compile_filter(bits[1])
+    return AppUrlNode(url, asvar)
