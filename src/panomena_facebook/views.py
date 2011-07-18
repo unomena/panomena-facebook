@@ -72,10 +72,12 @@ class RegisterView(object):
                 uid=fbdata['uid'],
                 oauth_access_token=fbdata['access_token']
             )
-            # redirect existing user
+            # redirect existing user appropriately
             if user:
                 login(request, user)
-                return redirect(settings.LOGIN_REDIRECT_URL)
+                url = request.REQUEST.get('next') or \
+                    settings.LOGIN_REDIRECT_URL
+                return ajax_redirect(request, url)
         # handle the form post
         form_class = self.form()
         if request.method == 'POST':
