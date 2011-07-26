@@ -54,9 +54,9 @@ class RegisterView(object):
             request.COOKIES, app_id, secret_key
         )
         if fbdata is None:
-            context['message'] = _('No Facebook data found in cookie. You ' \
-                'have porbably denied the Facebook application access to you ' \
-                'account or have not logged in.')
+            context['message'] = _(u'No Facebook data found in cookie. You ' \
+                'have either denied the Facebook application access to your ' \
+                'account or you have not logged in properly.')
             return render_to_response('facebook/failed.html', context)
         # get facebook user data
         try:
