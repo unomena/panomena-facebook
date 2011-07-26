@@ -7,10 +7,9 @@ import hashlib
 from PIL import Image
 from StringIO import StringIO
 
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.base import ContentFile
 
-from panomena_general.utils import base64_url_decode, SettingsFetcher, \
-    generate_filename
+from panomena_general.utils import base64_url_decode, SettingsFetcher
 
 from panomena_facebook import FACEBOOK_GRAPH_URL
 
@@ -44,7 +43,7 @@ def build_app_url(url):
 
 
 def fetch_profile_image(uid):
-    """Loads a file from a url and places it in a file object."""
+    """Loads the user profile image and places it in a file object."""
     url = FACEBOOK_GRAPH_URL + uid + '/picture'
     response = urllib2.urlopen(url)
     # make the required conversions to the image
@@ -53,15 +52,6 @@ def fetch_profile_image(uid):
     buf = StringIO()
     img.save(buf, 'JPEG')
     buf.seek(0)
-    # setup the uploaded file object
-    headers = response.headers
-    extention = response.geturl().split('.')[-1]
-    return InMemoryUploadedFile(
-        buf,
-        'profile',
-        generate_filename(extention),
-        headers['content-type'],
-        headers['content-length'],
-        None
-    )
+    # return the content file object
+    return ContentFile(buf.read())
 
