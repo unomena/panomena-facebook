@@ -17,8 +17,8 @@ from panomena_facebook import FACEBOOK_GRAPH_URL
 settings = SettingsFetcher('panomena facebbok')
 
 
-def parse_signed_request(signed_request, secret):
-    """Parsese the signed request for a facebook application."""
+def parse_signed_request(signed_request):
+    """Parses the signed request for a facebook application."""
     l = signed_request.split('.', 2)
     encoded_sig = l[0]
     payload = l[1]
@@ -27,7 +27,11 @@ def parse_signed_request(signed_request, secret):
     if data.get('algorithm').upper() != 'HMAC-SHA256':
         return None
     else:
-        expected_sig = hmac.new(secret, msg=payload, digestmod=hashlib.sha256).digest()
+        expected_sig = hmac.new(
+            settings.FACEBOOK_SECRET_KEY,
+            msg=payload,
+            digestmod=hashlib.sha256
+        ).digest()
     if sig != expected_sig:
         return None
     else:
@@ -54,4 +58,14 @@ def fetch_profile_image(uid):
     buf.seek(0)
     # return the content file object
     return ContentFile(buf.read())
+
+
+def auth_dialog_url(redirect_uri):
+    """Returns a url to the facebook auth dialog."""
+    query = urllib.urlencode({
+        'client_id': settings.FACEBOOK_APP_ID,
+        'scope': settings.FACEBOOK_PERMISSIONS,
+        'redirect_uri': redirect_uri,
+    })
+    return 'https://www.facebook.com/dialog/oauth?' + query
 
