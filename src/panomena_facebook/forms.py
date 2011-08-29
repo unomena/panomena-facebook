@@ -22,10 +22,11 @@ class BaseFacebookRegisterForm(BaseProfileForm):
             user.facebook_profile
         except FacebookProfile.DoesNotExist:
             fbdata = self.facebook_data
+            fbuserdata = self.facebook_user_data
             FacebookProfile.objects.create(
                 user=user,
-                uid=fbdata['uid'],
-                oauth_access_token=fbdata['access_token'],
+                uid=fbuserdata['id'],
+                oauth_access_token=fbdata['oauth_token'],
             )
         return user
 
