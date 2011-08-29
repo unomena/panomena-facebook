@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 from panomena_general.utils import base64_url_decode, SettingsFetcher
 
 from panomena_facebook import FACEBOOK_GRAPH_URL
+from panomena_facebook.exceptions import SignedRequestNotParsedException
 
 
 settings = SettingsFetcher('panomena facebbok')
@@ -25,7 +26,7 @@ def parse_signed_request(signed_request):
     sig = base64_url_decode(encoded_sig)
     data = json.loads(base64_url_decode(payload))
     if data.get('algorithm').upper() != 'HMAC-SHA256':
-        return None
+        raise SignedRequestNotParsedException()
     else:
         expected_sig = hmac.new(
             settings.FACEBOOK_SECRET_KEY,
@@ -33,7 +34,7 @@ def parse_signed_request(signed_request):
             digestmod=hashlib.sha256
         ).digest()
     if sig != expected_sig:
-        return None
+        raise SignedRequestNotParsedException()
     else:
         return data
 
