@@ -7,6 +7,7 @@ setup(
     author='',
     license='Proprietory',
     url='http://www.unomena.com/',
+    include_package_data=True,
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     dependency_links = [
