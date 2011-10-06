@@ -10,7 +10,7 @@ class BaseFacebookRegisterForm(BaseProfileForm):
         self.facebook_user_data = facebook_user_data
         super(BaseFacebookRegisterForm, self).__init__(request, *args, **kwargs)
         # fill fields with facebook data
-        self.initial.update(self.get_field_values(facebook_user_data))
+        self.update_field_values(facebook_user_data)
 
     def save(self):
         """Creates and attaches a facebook profile to the user object if

@@ -5,10 +5,13 @@ from django.shortcuts import render_to_response, redirect
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from panomena_general.utils import class_from_string, SettingsFetcher, \
     json_response, ajax_redirect, is_ajax_request
+
+from models import FacebookProfile
 
 
 settings = SettingsFetcher('facebook')
@@ -128,3 +131,53 @@ def share(request):
         return json_response({'success': success})
     else:
         return redirect(next_url)
+
+
+@login_required
+def facebook_settings(request):
+    """View for configuring facebook integration and listing friends
+    in common between the site and facebook.
+    
+    """
+    settings_form = settings.FACEBOOK_SETTINGS_FORM
+    settings_form = class_from_string(settings_form)
+    context = RequestContext(request, {})
+    user = request.user
+    fb = request.facebook
+    friends = None
+    if request.method == 'POST':
+        form = settings_form(request, request.POST, user=user)
+        if form.is_valid(): form.save()
+    else:
+        form = settings_form(request, user=user)
+    # collect friends matched between facebook and site
+    try:
+        connected = (fb.uid is not None)
+        if connected:
+            fb_friends = fb.graph.get_connections('me', 'friends')
+            fb_ids = [f['id'] for f in fb_friends['data']]
+            friends = User.objects.filter(facebook_profile__uid__in=fb_ids)
+    except facebook.GraphAPIError, e:
+        context['message'] = e.message
+        return render_to_response('facebook/failed.html', context)
+    context.update({
+        'form': form,
+        'connected': connected,
+        'friends': friends,
+    })
+    return render_to_response('facebook/settings.html', context)
+
+
+def disable(request):
+    """Removes the facebook profile to disable integration."""
+    # redirect appropriately
+    next = request.REQUEST.get('next', request.META.get('HTTP_REFERER', '/'))
+    response = redirect(next)
+    # remove cookie
+    app_id = settings.FACEBOOK_APP_ID
+    response.delete_cookie('fbs_%s' % app_id)
+    # delete the profile
+    try: request.user.facebook_profile.delete()
+    except FacebookProfile.DoesNotExist: pass
+    # return the response
+    return response
