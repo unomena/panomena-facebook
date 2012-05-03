@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='panomena-facebook',
     description='Panomena Facebook',
-    version='0.0.3',
+    version='0.0.4',
     author='',
     license='Proprietory',
     url='http://www.unomena.com/',
